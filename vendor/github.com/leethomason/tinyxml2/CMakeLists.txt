@@ -13,6 +13,7 @@ endif()
 
 project(tinyxml2)
 include(GNUInstallDirs)
+include(CTest)
 #enable_testing()
 
 #CMAKE_BUILD_TOOL
@@ -20,7 +21,7 @@ include(GNUInstallDirs)
 ################################
 # set lib version here
 
-set(GENERIC_LIB_VERSION "5.0.0")
+set(GENERIC_LIB_VERSION "5.0.1")
 set(GENERIC_LIB_SOVERSION "5")
 
 ################################
@@ -39,7 +40,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 option(BUILD_SHARED_LIBS "build as shared library" ON)
 option(BUILD_STATIC_LIBS "build as static library" OFF)
-option(BUILD_TESTS "build xmltest" ON)
+option(BUILD_TESTS "build xmltest (deprecated: Use BUILD_TESTING)" ON)
 
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -91,7 +92,7 @@ set_target_properties(tinyxml2_static PROPERTIES
         SOVERSION "${GENERIC_LIB_SOVERSION}")
 set_target_properties( tinyxml2_static PROPERTIES OUTPUT_NAME tinyxml2 )
 
-target_compile_definitions(tinyxml2 PUBLIC -D_CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(tinyxml2_static PUBLIC -D_CRT_SECURE_NO_WARNINGS)
 
 if(DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.11")
     target_include_directories(tinyxml2_static PUBLIC 
@@ -99,7 +100,7 @@ if(DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.11")
                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>)
 
     if(MSVC)
-      target_compile_definitions(tinyxml2 PUBLIC -D_CRT_SECURE_NO_WARNINGS)
+      target_compile_definitions(tinyxml2_static PUBLIC -D_CRT_SECURE_NO_WARNINGS)
     endif(MSVC)
 else()
     include_directories(${PROJECT_SOURCE_DIR})
@@ -120,7 +121,7 @@ install(TARGETS tinyxml2_static
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
-if(BUILD_TESTS)
+if(BUILD_TESTING AND BUILD_TESTS)
   add_executable(xmltest xmltest.cpp)
   if(BUILD_SHARED_LIBS)
     add_dependencies(xmltest tinyxml2)
@@ -136,6 +137,8 @@ if(BUILD_TESTS)
     COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:xmltest>/resources/out
     COMMENT "Configuring xmltest resources directory: ${CMAKE_BINARY_DIR}/resources"
   )
+
+  add_test(NAME xmltest COMMAND xmltest)
 endif()
 
 install(FILES tinyxml2.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -151,13 +154,15 @@ configure_file(tinyxml2.pc.in tinyxml2.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/tinyxml2.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 # uninstall target
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
+if(NOT TARGET uninstall)
+  configure_file(
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+      IMMEDIATE @ONLY)
 
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+  add_custom_target(uninstall
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif()
 
 file(WRITE
     ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake
