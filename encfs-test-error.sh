@@ -2,5 +2,5 @@
 
 rm -rf build
 mkdir -p build
-cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/local && time make -j 4 all && make test && cd .. && exit 0
+cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/local && time make -j 4 all && make test && make integration && cd .. && exit 0
 exit 1
