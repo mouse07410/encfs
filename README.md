@@ -1,7 +1,6 @@
 # EncFS - an Encrypted Filesystem
 
 _Build Status_
- - Circle: [![Circle CI](https://circleci.com/gh/vgough/encfs.svg?style=svg)](https://circleci.com/gh/vgough/encfs)
  - Travis: [![Travis CI](https://travis-ci.org/vgough/encfs.svg?branch=master)](https://travis-ci.org/vgough/encfs)
 
 ## About
@@ -79,3 +78,12 @@ between changes.
 
 How about a nice email instead?
 
+## FAQ
+
+### What settings should I use for Dropbox?
+
+Use **standard mode**. There [have](https://github.com/vgough/encfs/issues/141)
+been [reports](https://github.com/vgough/encfs/issues/388)
+of a pathological interaction of paranoia mode with Dropbox' rename
+detection. The problem seems to be with `External IV chaining`, which is
+not active in standard mode.

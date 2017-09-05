@@ -93,6 +93,23 @@ check_cxx_source_compiles ("#include <sys/types.h>
   int main() { getxattr(0,0,0,0,0,0); return 1; }
   " XATTR_ADD_OPT)
 
+# If awailable on current architecture (typically embedded 32-bit), link with it explicitly;
+# GCC autodetection is faulty, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81358 and
+# find_libray is no great help here since it is sometimes(!) not in standard paths.
+set(CMAKE_REQUIRED_FLAGS "-latomic")
+CHECK_CXX_SOURCE_COMPILES("int main() {return 0;}" COMPILER_NEEDS_LATOMIC)
+if(COMPILER_NEEDS_LATOMIC)
+        set(ATOMIC_LIBRARY atomic)
+endif()
+# compensate the effect of extra linking of libatomic on platforms where intrinsics are used
+set(CMAKE_REQUIRED_FLAGS "-Wl,--as-needed")
+CHECK_CXX_SOURCE_COMPILES("int main() {return 0;}" LINKER_SUPPORTS_WLASNEEDED)
+if(LINKER_SUPPORTS_WLASNEEDED)
+        list(APPEND EXTRA_LINKER_FLAGS "-Wl,--as-needed")
+endif()
+
+set(CMAKE_REQUIRED_FLAGS)
+
 # Check if we have some standard functions.
 include (CheckFuncs)
 check_function_exists_glibc (lchmod HAVE_LCHMOD)
@@ -146,14 +163,30 @@ if (ENABLE_NLS)
 endif (ENABLE_NLS)
 
 if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.5) # Need 3.6 or above.
-  find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable")
+  find_program(CLANG_TIDY_EXE NAMES "clang-tidy" "clang-tidy-4.0" DOC "Path to clang-tidy executable")
   if(NOT CLANG_TIDY_EXE)
     message(STATUS "clang-tidy not found.")
   else()
     message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*,-modernize-loop-convert,-cppcoreguidelines-pro-*,-readability-inconsistent-declaration-parameter-name,-google-readability-casting,-cert-err58-cpp,-google-runtime-int,-readability-named-parameter,-google-build-using-namespace,-misc-unused-parameters,-google-runtime-references")
+    string(CONCAT TIDY_OPTS "-checks=*"
+      ",-cert-err58-cpp"
+      ",-cppcoreguidelines-pro-*"
+      ",-google-build-using-namespace"
+      ",-google-readability-casting"
+      ",-google-readability-todo"
+      ",-google-runtime-int"
+      ",-google-runtime-references"
+      ",-misc-misplaced-widening-cast"
+      ",-misc-unused-parameters"
+      ",-modernize-loop-convert"
+      ",-readability-inconsistent-declaration-parameter-name"
+      ",-readability-named-parameter"
+      )
+    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" ${TIDY_OPTS})
     #set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-fix" "-checks=-*,google-readability-redundant-smartptr-get")
   endif()
+else()
+  message(STATUS "clang-tidy check skipped, need newer cmake")
 endif()
 
 if (USE_INTERNAL_TINYXML)
@@ -214,12 +247,14 @@ set_target_properties(encfs PROPERTIES
   VERSION ${ENCFS_VERSION}
   SOVERSION ${ENCFS_SOVERSION})
 target_link_libraries(encfs
+  ${EXTRA_LINKER_FLAGS}
   ${FUSE_LIBRARIES}
   ${OPENSSL_LIBRARIES}
   ${TINYXML_LIBRARIES}
   ${EASYLOGGING_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${Intl_LIBRARIES}
+  ${ATOMIC_LIBRARY}
 )
 if (INSTALL_LIBENCFS)
   install (TARGETS encfs DESTINATION ${LIB_INSTALL_DIR})
