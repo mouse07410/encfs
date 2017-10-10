@@ -18,30 +18,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "DirNode.h"
+
 #include <cerrno>
 #include <cstdio>
+#include <cstring>
+#ifdef __linux__
+#include <sys/fsuid.h>
+#endif
 #include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <utime.h>
-
-#include "DirNode.h"
-#include "FSConfig.h"
-#include "FileNode.h"
-#include "FileUtils.h"
-#include "NameIO.h"
-#ifdef linux
-#include <sys/fsuid.h>
-#endif
-
-#include "easylogging++.h"
-#include <cstring>
 #include <utility>
+#include <utime.h>
 
 #include "Context.h"
 #include "Error.h"
+#include "FSConfig.h"
+#include "FileNode.h"
+#include "FileUtils.h"
 #include "Mutex.h"
+#include "NameIO.h"
+#include "easylogging++.h"
 
 using namespace std;
 
@@ -501,29 +500,45 @@ int DirNode::mkdir(const char *plaintextPath, mode_t mode, uid_t uid,
   // if uid or gid are set, then that should be the directory owner
   int olduid = -1;
   int oldgid = -1;
-  if (uid != 0) {
-    olduid = setfsuid(uid);
-  }
   if (gid != 0) {
     oldgid = setfsgid(gid);
+    if (oldgid == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsgid error: " << strerror(eno);
+      return -EPERM;
+    }
+  }
+  if (uid != 0) {
+    olduid = setfsuid(uid);
+    if (olduid == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsuid error: " << strerror(eno);
+      return -EPERM;
+    }
   }
 
   int res = ::mkdir(cyName.c_str(), mode);
-
-  if (olduid >= 0) {
-    setfsuid(olduid);
-  }
-  if (oldgid >= 0) {
-    setfsgid(oldgid);
-  }
 
   if (res == -1) {
     int eno = errno;
     RLOG(WARNING) << "mkdir error on " << cyName << " mode " << mode << ": "
                   << strerror(eno);
     res = -eno;
-  } else {
-    res = 0;
+  }
+
+  if (olduid >= 0) {
+    if(setfsuid(olduid) == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsuid back error: " << strerror(eno);
+      // does not return error here as initial setfsuid worked
+    }
+  }
+  if (oldgid >= 0) {
+    if(setfsgid(oldgid) == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsgid back error: " << strerror(eno);
+      // does not return error here as initial setfsgid worked
+    }
   }
 
   return res;

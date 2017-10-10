@@ -18,22 +18,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "FileNode.h"
+
 #include <cerrno>
 #include <cinttypes>
+#include <cstring>
 #include <fcntl.h>
+#ifdef __linux__
+#include <sys/fsuid.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#ifdef linux
-#include <sys/fsuid.h>
-#endif
-
-#include <cstring>
 
 #include "CipherFileIO.h"
 #include "Error.h"
 #include "FileIO.h"
-#include "FileNode.h"
 #include "FileUtils.h"
 #include "MACFileIO.h"
 #include "Mutex.h"
@@ -154,19 +154,19 @@ int FileNode::mknod(mode_t mode, dev_t rdev, uid_t uid, gid_t gid) {
   int res;
   int olduid = -1;
   int oldgid = -1;
-  if (uid != 0) {
-    olduid = setfsuid(uid);
-    if (olduid == -1) {
-      int eno = errno;
-      RLOG(DEBUG) << "setfsuid error: " << strerror(eno);
-      return -EPERM;
-    }
-  }
   if (gid != 0) {
     oldgid = setfsgid(gid);
     if (oldgid == -1) {
       int eno = errno;
       RLOG(DEBUG) << "setfsgid error: " << strerror(eno);
+      return -EPERM;
+    }
+  }
+  if (uid != 0) {
+    olduid = setfsuid(uid);
+    if (olduid == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsuid error: " << strerror(eno);
       return -EPERM;
     }
   }
@@ -194,10 +194,18 @@ int FileNode::mknod(mode_t mode, dev_t rdev, uid_t uid, gid_t gid) {
   }
 
   if (olduid >= 0) {
-    setfsuid(olduid);
+    if(setfsuid(olduid) == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsuid back error: " << strerror(eno);
+      // does not return error here as initial setfsuid worked
+    }
   }
   if (oldgid >= 0) {
-    setfsgid(oldgid);
+    if(setfsgid(oldgid) == -1) {
+      int eno = errno;
+      RLOG(DEBUG) << "setfsgid back error: " << strerror(eno);
+      // does not return error here as initial setfsgid worked
+    }
   }
 
   return res;
