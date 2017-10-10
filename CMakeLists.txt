@@ -37,17 +37,18 @@ if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.0)
 else ()
   if (CMAKE_COMPILER_IS_GNUCXX)
     message ("** Assuming that GNU CXX uses -std=c++11 flag for C++11 compatibility.")
-    list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+    list(APPEND CMAKE_CXX_FLAGS " -std=c++11 ")
   elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message ("** Assuming that Clang uses -std=c++11 flag for C++11 compatibility.")
-    list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+    list(APPEND CMAKE_CXX_FLAGS " -std=c++11 ")
   else()
     message ("** No CMAKE C++11 check. If the build breaks, you're on your own.")
   endif()
 endif ()
 
 # Let's enable some compilation warnings
-list(APPEND CMAKE_CXX_FLAGS "-Wall -Wextra")
+#list(APPEND CMAKE_CXX_FLAGS " -maes -mpclmul -mrdrnd -msse2 -mssse3 -msse4.2 -mtune=native -Os -Ofast -std=c++11 ")
+set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -maes -mpclmul -mrdrnd -msse2 -mssse3 -msse4.2 -mtune=native -Os -Ofast -std=c++11 ")
 
 add_definitions( -DPACKAGE="encfs" )
 

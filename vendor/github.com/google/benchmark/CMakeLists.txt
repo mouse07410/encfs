@@ -74,7 +74,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 else()
   # Try and enable C++11. Don't use C++14 because it doesn't work in some
   # configurations.
-  add_cxx_compiler_flag(-std=c++11)
+  add_cxx_compiler_flag(" -std=c++11 ")
   if (NOT HAVE_CXX_FLAG_STD_CXX11)
     add_cxx_compiler_flag(-std=c++0x)
   endif()
@@ -175,6 +175,7 @@ endif(BENCHMARK_USE_LIBCXX)
 # Determine the correct regular expression engine to use
 cxx_feature_check(STD_REGEX)
 cxx_feature_check(GNU_POSIX_REGEX)
+#set(HAVE_GNU_POSIX_REGEX True)
 cxx_feature_check(POSIX_REGEX)
 if(NOT HAVE_STD_REGEX AND NOT HAVE_GNU_POSIX_REGEX AND NOT HAVE_POSIX_REGEX)
   message(FATAL_ERROR "Failed to determine the source files for the regular expression backend")
@@ -188,7 +189,7 @@ cxx_feature_check(STEADY_CLOCK)
 find_package(Threads REQUIRED)
 
 # Set up directories
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include /opt/local/include)
 
 # Build the targets
 add_subdirectory(src)
