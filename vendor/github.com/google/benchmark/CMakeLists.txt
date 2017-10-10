@@ -178,6 +178,7 @@ endif(BENCHMARK_USE_LIBCXX)
 # Determine the correct regular expression engine to use
 cxx_feature_check(STD_REGEX)
 cxx_feature_check(GNU_POSIX_REGEX)
+set(HAVE_GNU_POSIX_REGEX  True)
 cxx_feature_check(POSIX_REGEX)
 if(NOT HAVE_STD_REGEX AND NOT HAVE_GNU_POSIX_REGEX AND NOT HAVE_POSIX_REGEX)
   message(FATAL_ERROR "Failed to determine the source files for the regular expression backend")
@@ -191,7 +192,7 @@ cxx_feature_check(STEADY_CLOCK)
 find_package(Threads REQUIRED)
 
 # Set up directories
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include /opt/local/include)
 
 # Build the targets
 add_subdirectory(src)
