@@ -12,7 +12,7 @@ if [[ "$CHECK" == "true" ]]; then
 fi
 
 if uname -s | grep -q Darwin; then
-  CFG="-DENABLE_NLS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl $CFG"
+  CFG="-DENABLE_NLS=OFF -DOPENSSL_ROOT_DIR=/opt/local -DCMAKE_INSTALL_PREFIX=/opt/local $CFG"
 fi
 
 if [[ ! -d build ]]
