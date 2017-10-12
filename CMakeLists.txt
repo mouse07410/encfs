@@ -108,7 +108,7 @@ endif()
 set(CMAKE_REQUIRED_FLAGS "-Wl,--as-needed")
 CHECK_CXX_SOURCE_COMPILES("int main() {return 0;}" LINKER_SUPPORTS_WLASNEEDED)
 if(LINKER_SUPPORTS_WLASNEEDED)
-        SET(EXTRA_LINKER_FLAGS "-Wl,--as-needed ${EXTRA_LINKER_FLAGS}")
+        SET(EXTRA_LINKER_FLAGS "-Wl,--as-needed")
 endif()
 
 set(CMAKE_REQUIRED_FLAGS)
