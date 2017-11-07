@@ -15,6 +15,8 @@ if uname -s | grep -q Darwin; then
   CFG="-DENABLE_NLS=OFF -DOPENSSL_ROOT_DIR=/opt/local -DCMAKE_INSTALL_PREFIX=/opt/local $CFG"
 fi
 
+rm -rf build
+
 if [[ ! -d build ]]
 then
   mkdir build
