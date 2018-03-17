@@ -254,7 +254,7 @@ static RootPtr initRootInfo(int &argc, char **&argv) {
 
     auto ctx = std::make_shared<EncFS_Context>();
     ctx->publicFilesystem = opts->ownerCreate;
-    if (checkDir(opts->rootDir)) result = initFS(ctx, opts);
+    if (checkDir(opts->rootDir)) result = initFS(ctx.get(), opts);
 
     if (!result)
       cerr << _("Unable to initialize encrypted filesystem - check path.\n");
@@ -275,7 +275,7 @@ static RootPtr initRootInfo(const char *crootDir) {
 
     auto ctx = std::make_shared<EncFS_Context>();
     ctx->publicFilesystem = opts->ownerCreate;
-    result = initFS(ctx, opts);
+    result = initFS(ctx.get(), opts);
   }
 
   if (!result)
