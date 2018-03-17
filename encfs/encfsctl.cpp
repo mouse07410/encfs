@@ -34,6 +34,7 @@
 
 #include "Cipher.h"
 #include "CipherKey.h"
+#include "Context.h"
 #include "DirNode.h"
 #include "Error.h"
 #include "FSConfig.h"
@@ -95,7 +96,7 @@ struct CommandOpts {
     {"showcruft", 1, 1, cmd_showcruft, "(root dir)",
      // xgroup(usage)
      gettext_noop("  -- show undecodable filenames in the volume")},
-    {"cat", 2, 3, cmd_cat, "[--extpass=prog] (root dir) path",
+    {"cat", 2, 3, cmd_cat, "[--extpass=prog] [--reverse] (root dir) path",
      // xgroup(usage)
      gettext_noop("  -- decodes the file and cats it to standard out")},
     {"decode", 1, 100, cmd_decode,
@@ -219,7 +220,7 @@ static RootPtr initRootInfo(int &argc, char **&argv) {
   opts->createIfNotFound = false;
   opts->checkKey = false;
 
-  static struct option long_options[] = {{"extpass", 1, 0, 'p'}, {0, 0, 0, 0}};
+  static struct option long_options[] = {{"extpass", 1, 0, 'p'}, {"reverse", 0, nullptr, 'r'}, {0, 0, 0, 0}};
 
   for (;;) {
     int option_index = 0;
@@ -230,6 +231,9 @@ static RootPtr initRootInfo(int &argc, char **&argv) {
     switch (res) {
       case 'p':
         opts->passwordProgram.assign(optarg);
+        break;
+      case 'r':
+        opts->reverseEncryption = true;
         break;
       default:
         RLOG(WARNING) << "getopt error: " << res;
@@ -248,7 +252,9 @@ static RootPtr initRootInfo(int &argc, char **&argv) {
     --argc;
     ++argv;
 
-    if (checkDir(opts->rootDir)) result = initFS(NULL, opts);
+    auto ctx = std::make_shared<EncFS_Context>();
+    ctx->publicFilesystem = opts->ownerCreate;
+    if (checkDir(opts->rootDir)) result = initFS(ctx.get(), opts);
 
     if (!result)
       cerr << _("Unable to initialize encrypted filesystem - check path.\n");
@@ -266,7 +272,10 @@ static RootPtr initRootInfo(const char *crootDir) {
     opts->rootDir = rootDir;
     opts->createIfNotFound = false;
     opts->checkKey = false;
-    result = initFS(NULL, opts);
+
+    auto ctx = std::make_shared<EncFS_Context>();
+    ctx->publicFilesystem = opts->ownerCreate;
+    result = initFS(ctx.get(), opts);
   }
 
   if (!result)
