@@ -96,7 +96,7 @@ struct CommandOpts {
     {"showcruft", 1, 1, cmd_showcruft, "(root dir)",
      // xgroup(usage)
      gettext_noop("  -- show undecodable filenames in the volume")},
-    {"cat", 2, 3, cmd_cat, "[--extpass=prog] [--reverse] (root dir) path",
+    {"cat", 2, 4, cmd_cat, "[--extpass=prog] [--reverse] (root dir) path",
      // xgroup(usage)
      gettext_noop("  -- decodes the file and cats it to standard out")},
     {"decode", 1, 100, cmd_decode,
@@ -376,13 +376,19 @@ template <typename T>
 int processContents(const std::shared_ptr<EncFS_Root> &rootInfo,
                     const char *path, T &op) {
   int errCode = 0;
-  std::shared_ptr<FileNode> node =
-      rootInfo->root->openNode(path, "encfsctl", O_RDONLY, &errCode);
+  std::shared_ptr<FileNode> node;
+
+  try {
+    node = rootInfo->root->openNode(path, "encfsctl", O_RDONLY, &errCode);
+  }
+  catch(...) {}
 
   if (!node) {
     // try treating filename as an enciphered path
     string plainName = rootInfo->root->plainPath(path);
-    node = rootInfo->root->lookupNode(plainName.c_str(), "encfsctl");
+    if (plainName.length() > 0) {
+      node = rootInfo->root->lookupNode(plainName.c_str(), "encfsctl");
+    }
     if (node) {
       errCode = node->open(O_RDONLY);
       if (errCode < 0) node.reset();

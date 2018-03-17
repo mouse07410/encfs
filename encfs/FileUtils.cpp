@@ -884,7 +884,7 @@ static void selectBlockMAC(int *macBytes, int *macRandBytes, bool forceMac) {
     // xgroup(setup)
     addMAC = boolDefaultNo(
         _("Enable block authentication code headers\n"
-          "on every block in a file?  This adds about 12 bytes per block\n"
+          "on every block in a file?  This adds about 8 bytes per block\n"
           "to the storage requirements for a file, and significantly affects\n"
           "performance but it also means [almost] any modifications or errors\n"
           "within a block will be caught and will cause a read error."));
@@ -1686,6 +1686,15 @@ RootPtr initFS(EncFS_Context *ctx, const std::shared_ptr<EncFS_Opts> &opts) {
   return rootInfo;
 }
 
+void unmountFS(const char *mountPoint) {
+  // fuse_unmount succeeds and returns void
+  fuse_unmount(mountPoint, nullptr);
+#ifdef __APPLE__
+  // fuse_unmount does not work on Mac OS, see #428
+  unmount(mountPoint, MNT_FORCE);
+#endif
+}
+
 int remountFS(EncFS_Context *ctx) {
   VLOG(1) << "Attempting to reinitialize filesystem";
 
@@ -1706,13 +1715,8 @@ bool unmountFS(EncFS_Context *ctx) {
     ctx->setRoot(std::shared_ptr<DirNode>());
     return false;
   }
-// Time to unmount!
-  fuse_unmount(ctx->opts->mountPoint.c_str(), nullptr);
-#ifdef __APPLE__
-  // fuse_unmount does not work on Mac OS, see #428
-  unmount(ctx->opts->mountPoint.c_str(), MNT_FORCE);
-#endif
-  // fuse_unmount succeeds and returns void
+  // Time to unmount!
+  unmountFS(ctx->opts->mountPoint.c_str());
   RLOG(INFO) << "Filesystem inactive, unmounted: " << ctx->opts->mountPoint;
   return true;
 }

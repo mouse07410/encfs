@@ -609,12 +609,7 @@ int main(int argc, char *argv[]) {
 
   // Let's unmount if requested
   if (encfsArgs->opts->unmount) {
-    fuse_unmount(encfsArgs->opts->mountPoint.c_str(), nullptr);
-#ifdef __APPLE__
-    // fuse_unmount does not work on Mac OS, see #428
-    unmount(encfsArgs->opts->mountPoint.c_str(), MNT_FORCE);
-#endif
-    // fuse_unmount succeeds and returns void
+    unmountFS(encfsArgs->opts->mountPoint.c_str());
     cout << "Filesystem unmounting: " << encfsArgs->opts->mountPoint << endl;
     return 0;
   }
