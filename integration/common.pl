@@ -2,15 +2,7 @@
 # works on Linux AND OSX
 sub portable_unmount {
     my $crypt = shift;
-    qx({ echo "$crypt, before" ; lsof "$crypt" ; } >>/tmp/encfsdebug.log 2>&1);
-    my $fusermount = qx(which fusermount);
-    chomp($fusermount);
-    if(-f $fusermount) {
-        qx($fusermount -u "$crypt");
-    } else {
-        qx(umount "$crypt");
-        qx({ echo "$crypt, after" ; lsof "$crypt" ; } >>/tmp/encfsdebug.log 2>&1);
-    }
+    qx(./build/encfs -u "$crypt" >/dev/null);
 }
 
 # Helper function
