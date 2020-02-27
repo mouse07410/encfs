@@ -13,6 +13,43 @@ ADD_CASES(TC_ConsoleOut,
           {{"^[-]+$", MR_Next},
            {"^Benchmark %s Time %s CPU %s Iterations$", MR_Next},
            {"^[-]+$", MR_Next}});
+static int AddContextCases() {
+  AddCases(TC_ConsoleErr,
+           {
+               {"%int[-/]%int[-/]%int %int:%int:%int$", MR_Default},
+               {"Running .*/reporter_output_test(\\.exe)?$", MR_Next},
+               {"Run on \\(%int X %float MHz CPU s\\)", MR_Next},
+           });
+  AddCases(TC_JSONOut, {{"^\\{", MR_Default},
+                        {"\"context\":", MR_Next},
+                        {"\"date\": \"", MR_Next},
+                        {"\"executable\": \".*/reporter_output_test(\\.exe)?\",", MR_Next},
+                        {"\"num_cpus\": %int,$", MR_Next},
+                        {"\"mhz_per_cpu\": %float,$", MR_Next},
+                        {"\"cpu_scaling_enabled\": ", MR_Next},
+                        {"\"caches\": \\[$", MR_Next}});
+  auto const& Caches = benchmark::CPUInfo::Get().caches;
+  if (!Caches.empty()) {
+    AddCases(TC_ConsoleErr, {{"CPU Caches:$", MR_Next}});
+  }
+  for (size_t I = 0; I < Caches.size(); ++I) {
+    std::string num_caches_str =
+        Caches[I].num_sharing != 0 ? " \\(x%int\\)$" : "$";
+    AddCases(
+        TC_ConsoleErr,
+        {{"L%int (Data|Instruction|Unified) %intK" + num_caches_str, MR_Next}});
+    AddCases(TC_JSONOut, {{"\\{$", MR_Next},
+                          {"\"type\": \"", MR_Next},
+                          {"\"level\": %int,$", MR_Next},
+                          {"\"size\": %int,$", MR_Next},
+                          {"\"num_sharing\": %int$", MR_Next},
+                          {"}[,]{0,1}$", MR_Next}});
+  }
+
+  AddCases(TC_JSONOut, {{"],$"}});
+  return 0;
+}
+int dummy_register = AddContextCases();
 ADD_CASES(TC_CSVOut, {{"%csv_header"}});
 
 // ========================================================================= //
@@ -20,7 +57,7 @@ ADD_CASES(TC_CSVOut, {{"%csv_header"}});
 // ========================================================================= //
 
 void BM_basic(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_basic);
@@ -39,14 +76,14 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_basic\",%csv_report$"}});
 // ========================================================================= //
 
 void BM_bytes_per_second(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
   state.SetBytesProcessed(1);
 }
 BENCHMARK(BM_bytes_per_second);
 
 ADD_CASES(TC_ConsoleOut,
-          {{"^BM_bytes_per_second %console_report +%floatB/s$"}});
+          {{"^BM_bytes_per_second %console_report +%float[kM]{0,1}B/s$"}});
 ADD_CASES(TC_JSONOut, {{"\"name\": \"BM_bytes_per_second\",$"},
                        {"\"iterations\": %int,$", MR_Next},
                        {"\"real_time\": %float,$", MR_Next},
@@ -61,14 +98,14 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_bytes_per_second\",%csv_bytes_report$"}});
 // ========================================================================= //
 
 void BM_items_per_second(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
   state.SetItemsProcessed(1);
 }
 BENCHMARK(BM_items_per_second);
 
 ADD_CASES(TC_ConsoleOut,
-          {{"^BM_items_per_second %console_report +%float items/s$"}});
+          {{"^BM_items_per_second %console_report +%float[kM]{0,1} items/s$"}});
 ADD_CASES(TC_JSONOut, {{"\"name\": \"BM_items_per_second\",$"},
                        {"\"iterations\": %int,$", MR_Next},
                        {"\"real_time\": %float,$", MR_Next},
@@ -83,7 +120,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_items_per_second\",%csv_items_report$"}});
 // ========================================================================= //
 
 void BM_label(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
   state.SetLabel("some label");
 }
@@ -106,7 +143,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_label\",%csv_label_report_begin\"some "
 
 void BM_error(benchmark::State& state) {
   state.SkipWithError("message");
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_error);
@@ -123,7 +160,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_error\",,,,,,,,true,\"message\"$"}});
 // ========================================================================= //
 
 void BM_no_arg_name(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_no_arg_name)->Arg(3);
@@ -136,7 +173,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_no_arg_name/3\",%csv_report$"}});
 // ========================================================================= //
 
 void BM_arg_name(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_arg_name)->ArgName("first")->Arg(3);
@@ -149,7 +186,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_arg_name/first:3\",%csv_report$"}});
 // ========================================================================= //
 
 void BM_arg_names(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_arg_names)->Args({2, 5, 4})->ArgNames({"first", "", "third"});
@@ -163,7 +200,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_arg_names/first:2/5/third:4\",%csv_report$"}});
 // ========================================================================= //
 
 void BM_Complexity_O1(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
   state.SetComplexityN(state.range(0));
 }
@@ -179,7 +216,7 @@ ADD_CASES(TC_ConsoleOut, {{"^BM_Complexity_O1_BigO %bigOStr %bigOStr[ ]*$"},
 
 // Test that non-aggregate data is printed by default
 void BM_Repeat(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 // need two repetitions min to be able to output any aggregate output
@@ -246,7 +283,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_Repeat/repeats:4\",%csv_report$"},
 // Test that a non-repeated test still prints non-aggregate results even when
 // only-aggregate reports have been requested
 void BM_RepeatOnce(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_RepeatOnce)->Repetitions(1)->ReportAggregatesOnly();
@@ -256,7 +293,7 @@ ADD_CASES(TC_CSVOut, {{"^\"BM_RepeatOnce/repeats:1\",%csv_report$"}});
 
 // Test that non-aggregate data is not reported
 void BM_SummaryRepeat(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_SummaryRepeat)->Repetitions(3)->ReportAggregatesOnly();
@@ -275,7 +312,7 @@ ADD_CASES(TC_CSVOut, {{".*BM_SummaryRepeat/repeats:3 ", MR_Not},
                       {"^\"BM_SummaryRepeat/repeats:3_stddev\",%csv_report$"}});
 
 void BM_RepeatTimeUnit(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_RepeatTimeUnit)
@@ -308,7 +345,7 @@ const auto UserStatistics = [](const std::vector<double>& v) {
   return v.back();
 };
 void BM_UserStats(benchmark::State& state) {
-  while (state.KeepRunning()) {
+  for (auto _ : state) {
   }
 }
 BENCHMARK(BM_UserStats)
