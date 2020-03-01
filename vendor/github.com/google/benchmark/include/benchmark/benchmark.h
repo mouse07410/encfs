@@ -399,18 +399,6 @@ struct Statistics {
     : name_(name), compute_(compute) {}
 };
 
-// StatisticsFunc is passed to a benchmark in order to compute some descriptive
-// statistics over all the measurements of some type
-typedef double(StatisticsFunc)(const std::vector<double>&);
-
-struct Statistics {
-  std::string name_;
-  StatisticsFunc* compute_;
-
-  Statistics(std::string name, StatisticsFunc* compute)
-    : name_(name), compute_(compute) {}
-};
-
 namespace internal {
 class ThreadTimer;
 class ThreadManager;
@@ -1319,9 +1307,6 @@ class BenchmarkReporter {
     BigO complexity;
     BigOFunc* complexity_lambda;
     int64_t complexity_n;
-
-    // what statistics to compute from the measurements
-    const std::vector<Statistics>* statistics;
 
     // what statistics to compute from the measurements
     const std::vector<Statistics>* statistics;
