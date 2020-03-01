@@ -12,8 +12,9 @@ if [[ "$CHECK" == "true" ]]; then
 fi
 
 if uname -s | grep -q Darwin; then
-  CXXFLAGS="${CXXFLAGS} -D_FILE_OFFSET_BITS=64 -D_DARWIN_USE_64_BIT_INODE -I/usr/local/include/osxfuse/fuse "
-  CFG="-DENABLE_NLS=OFF -DOPENSSL_ROOT_DIR=/opt/local -DCMAKE_INSTALL_PREFIX=/opt/local -DFUSE_INCLUDE_DIR=/usr/local/include/osxfuse/fuse -DFUSE_LIBRARIES=/usr/local/lib/libosxfuse.dylib $CFG"
+  CXXFLAGS="${CXXFLAGS} -D_FILE_OFFSET_BITS=64 -D_DARWIN_USE_64_BIT_INODE "
+  CFG="-DENABLE_NLS=OFF -DCMAKE_INSTALL_PREFIX=/opt/local $CFG"
+  #CFG="-DENABLE_NLS=OFF -DOPENSSL_ROOT_DIR=/opt/local -DCMAKE_INSTALL_PREFIX=/opt/local $CFG"
 fi
 
 rm -rf build
