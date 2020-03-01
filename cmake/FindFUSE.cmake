@@ -19,13 +19,14 @@ endif (APPLE)
 
 # find includes
 find_path (FUSE_INCLUDE_DIR fuse.h
-        PATHS /opt /opt/local /usr/local /usr/local/include /usr/pkg
+        PATHS /opt /opt/local /usr/local /usr/pkg
         PATH_SUFFIXES ${FUSE_SUFFIXES})
 
 # find lib
 find_library (FUSE_LIBRARIES 
-              PATHS /usr/local/lib /opt/local/lib
-              NAMES ${FUSE_NAMES})
+              NAMES ${FUSE_NAMES}
+              PATHS /opt /opt/local /usr /usr/local /usr/pkg
+              PATH_SUFFIXES lib)
 
 include ("FindPackageHandleStandardArgs")
 find_package_handle_standard_args ("FUSE" DEFAULT_MSG
