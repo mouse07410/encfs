@@ -17,11 +17,7 @@ fi
 
 echo "Compiling... [$FILE]"
 
-if [ ! -d "bin" ];then
-  mkdir bin
-fi;
-
-COMPILE_LINE="$COMPILER $FILE easylogging++.cc -o bin/$FILE.bin $CXX_STD -pthread -lboost_system"
+COMPILE_LINE="$COMPILER $FILE easylogging++.cc -o bin/$FILE.bin $CXX_STD -std=c++11 -pthread -I /opt/local/include -L/opt/local/lib -lboost_system -Wno-deprecated-declarations"
 
 echo "    $COMPILE_LINE"
 

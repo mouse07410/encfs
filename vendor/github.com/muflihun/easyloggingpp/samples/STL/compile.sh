@@ -10,7 +10,6 @@ macro="$macro -DELPP_LOG_UNORDERED_MAP"
 macro="$macro -DELPP_FEATURE_CRASH_LOG"
 macro="$macro -DELPP_LOGGING_FLAGS_FROM_ARG"
 macro="$macro -DELPP_FEATURE_ALL"
-macro="$macro -DELPP_NO_GLOBAL_LOCK"
 # macro="$macro -DELPP_DEFAULT_LOG_FILE=\"/a/path/that/does/not/exist/f.log\""
 
 if [ "$2" = "" ];then
@@ -19,7 +18,7 @@ else
   COMPILER=$2
 fi
 
-CXX_STD='-std=c++11'
+CXX_STD='-std=c++0x -pthread'
 
 if [ "$FILE" = "" ]; then
   echo "Please provide filename to compile"
@@ -28,7 +27,7 @@ fi
 
 echo "Compiling... [$FILE]"
 
-COMPILE_LINE="$COMPILER $FILE easylogging++.cc -o bin/$FILE.bin $macro $CXX_STD -pthread -Wall -Wextra -pedantic -pedantic-errors -Werror -Wfatal-errors -Wundef -Wunused"
+COMPILE_LINE="$COMPILER $FILE easylogging++.cc -o bin/$FILE.bin $macro $CXX_STD -Wall -Wextra -pedantic -pedantic-errors -Werror -Wfatal-errors -Wundef -Wunused"
 
 echo "    $COMPILE_LINE"
 
