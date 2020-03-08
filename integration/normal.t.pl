@@ -10,8 +10,8 @@ use IO::Handle;
 
 require("integration/common.pl");
 
-#my $tempDir = $ENV{'TMPDIR'} || "/tmp";
-my $tempDir = "/tmp";
+my $tempDir = $ENV{'TMPDIR'} || "/tmp";
+#my $tempDir = "/tmp";
 
 if($^O eq "linux" and $tempDir eq "/tmp") {
    # On Linux, /tmp is often a tmpfs mount that does not
