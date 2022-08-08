@@ -15,6 +15,6 @@ task:
   osx_instance:
     image: catalina-xcode-11.3.1
   install_script:
-    - brew --cask install osxfuse
+    - brew install --cask osxfuse
   script:
     - ./build.sh
